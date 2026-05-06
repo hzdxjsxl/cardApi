@@ -1,0 +1,63 @@
+server:
+  port: 8080
+secure:
+  pwd-salt: hzdxjack
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 👇 确认这里的 URL 和 密码 是对的
+    url: jdbc:mysql://localhost:3306/blankmanage1010?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: hzdx011029
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  # 🌟 Redis 高可用连接池配置
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    # 如果你本地的 Redis 设置了密码，写在这里；没有就直接留空
+    password:
+    # 使用 0 号数据库
+    database: 0
+    # 连接超时时间
+    timeout: 10s
+    lettuce:
+      pool:
+        # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 8
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: -1ms
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 0
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开启控制台 SQL 日志，方便调试
+  global-config:
+    db-config:
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+# Sa-Token 配置
+sa-token:
+  # token名称 (同时也是cookie名称，前端以此作为 Header 名传过来最佳)
+  token-name: Authorization
+  # token有效期，单位s 默认30天, -1代表永不过期 (咱们设为 12 小时 = 43200秒)
+  timeout: 43200
+  # token临时有效期 (指定时间内无操作就踢下线)，单位s (比如设为 2 小时)
+  active-timeout: 7200
+  # 是否允许同一账号并发登录 (为 false 时新登录挤掉旧登录)
+  is-concurrent: false
+  # 在多人登录同一账号时，是否共用一个token (为 false 时每次登录新建 token)
+  is-share: false
+  # 是否尝试从 cookie 里读取 Token (前后端分离架构建议关掉，防 CSRF 攻击)
+  is-read-cookie: false
+minio:
+  endpoint: http://127.0.0.1:9000  # 注意：代码里连的是 9000 端口（API端口），不是 9001（控制台端口）！
+  access-key: admin
+  secret-key: hzdx011029
+  bucket-name: flange-sys
