@@ -8,7 +8,7 @@
 ##  🏃 快速开始
 
 1.  **环境准备**：JDK 1.8+ / MySQL 8.0 / Redis (可选，依 Sa-Token 配置而定)。
-2.  **数据初始化**：执行 `sql/init.sql` 导入基础表结构。
+2.  **数据初始化**：执行 `resources/sql/init.sql` 导入基础表结构。
 3.  **修改配置**：进入 `src/main/resources/application.yml`，修改数据库连接信息：
 4.  **启动项目**：运行 `cardApiApplication.java`。
 
