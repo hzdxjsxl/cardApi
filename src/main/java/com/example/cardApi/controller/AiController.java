@@ -39,7 +39,7 @@ public class AiController {
             List<?> cards = (List<?>) requestBody.get("cards");
             String promptDesc = "用户抽到了以下塔罗牌：" + JSON.toJSONString(cards) + "。请用神秘、深邃的语气直接解析，不要废话。";
             Map<String, Object> llmRequest = new HashMap<>();
-            llmRequest.put("model", "deepseek-chat");
+            llmRequest.put("model", "qwen-plus");
             llmRequest.put("stream", true); // 开启流式输出
             llmRequest.put("messages", List.of(
                     Map.of("role", "user", "content", promptDesc)
@@ -62,7 +62,7 @@ public class AiController {
                             emitter.send(SseEmitter.event().data("[DONE]"));
                             emitter.complete();
                         } else {
-                            emitter.send(SseEmitter.event().data("{\"text\": " + data + "}"));
+                            emitter.send(SseEmitter.event().data(data));
                         }
                     } catch (IOException e) {
                         emitter.completeWithError(e);
@@ -77,8 +77,25 @@ public class AiController {
 
                 @Override
                 public void onFailure(EventSource eventSource, Throwable t, Response response) {
-                    System.err.println("大模型流式请求失败: " + t.getMessage());
-                    emitter.completeWithError(t);
+                    if (t != null) {
+                        // 纯网络异常
+                        System.err.println("大模型网络请求异常: " + t.getMessage());
+                        emitter.completeWithError(t);
+                    } else if (response != null) {
+                        // AI 平台返回了错误码 (核心原因在这里)
+                        try {
+                            String errorBody = response.body() != null ? response.body().string() : "无详细信息";
+                            System.err.println("大模型接口拒绝访问，HTTP状态码: " + response.code());
+                            System.err.println("大模型真实报错详情: " + errorBody);
+
+                            // 抛出带有明确原因的异常结束流
+                            emitter.completeWithError(new RuntimeException("AI API Error: " + response.code()));
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                        }
+                    } else {
+                        emitter.completeWithError(new RuntimeException("未知的流异常结束"));
+                    }
                 }
             });
 
