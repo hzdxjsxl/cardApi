@@ -32,21 +32,7 @@ public class UserController {
     @SaIgnore
     @PostMapping("/login")
     public ApiResponse<Map<String, String>> login(@RequestBody LoginQuery loginForm) {
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUsername, loginForm.getUsername())
-                .eq(User::getPassword, userService.getSalt(loginForm.getPassword()))
-                .eq(User::getStatus, 1);
-        User user = userService.getOne(wrapper);
-        if (user != null) {
-            StpUtil.login(user.getId());
-            user.setPassword(null);
-            StpUtil.getSession().set("currentUser", user);
-            Map<String, String> data = new HashMap<>();
-            data.put("token", StpUtil.getTokenValue());
-            return ApiResponse.success(data);
-        } else {
-            return ApiResponse.error(500, "账号或密码错误");
-        }
+        return userService.login(loginForm.getUsername(),loginForm.getPassword());
     }
     @Operation(summary = "用户注册")
     @SaIgnore
@@ -67,7 +53,8 @@ public class UserController {
         newUser.setStatus(true);
         boolean success = userService.save(newUser);
         if (success) {
-            return ApiResponse.success("缔结契约成功");
+            ApiResponse<Map<String, String>> login = userService.login(registerForm.getUsername(), registerForm.getPassword());
+            return ApiResponse.success(login.getData().get("token"));
         } else {
             return ApiResponse.error(500, "灵力波动，注册失败");
         }

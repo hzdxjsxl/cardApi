@@ -15,22 +15,19 @@ public class SaTokenConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册 Sa-Token 拦截器
         registry.addInterceptor(new SaInterceptor(handler -> {
-                    // 🌟 核心防线：拦截所有路由，并校验登录状态
                     SaRouter.match("/**").check(r -> StpUtil.checkLogin());
 
                 })).addPathPatterns("/**")
-                // 极少数纯静态资源（非业务接口）可以在这里写死排除，比如前端界面的静态文件
                 .excludePathPatterns("/api/mock/**")
                 .excludePathPatterns(
                         "/webjars/**",
-                        "/favicon.ico",        // 必须放行！
-                        "/error",              // 必须放行！
+                        "/favicon.ico",
+                        "/error",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/swagger-resources/**",
-                        // 🌟 2. OpenAPI 3 数据源（防死角核心！）
-                        "/v3/api-docs",        // 注意这里没有后面的斜杠和星号！
-                        "/v3/api-docs/**"     // 放行子路径
+                        "/v3/api-docs",
+                        "/v3/api-docs/**"
                 )
                 .excludePathPatterns("/favicon.ico");
     }

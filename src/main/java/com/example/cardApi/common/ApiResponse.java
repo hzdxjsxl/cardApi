@@ -33,7 +33,7 @@ public class ApiResponse<T> implements Serializable {
 
     public static <T> ApiResponse<T> success(T data) {
         ApiResponse<T> response = new ApiResponse<>();
-        response.setCode(200);
+        response.setCode(0);
         response.setMessage("成功");
         response.setData(data);
         response.setTimestamp(System.currentTimeMillis());
