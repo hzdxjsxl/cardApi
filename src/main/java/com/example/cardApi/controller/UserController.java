@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,35 +51,26 @@ public class UserController {
     @Operation(summary = "用户注册")
     @SaIgnore
     @PostMapping("/register")
-    public ApiResponse<Map<String, String>> register(@RequestBody LoginQuery loginForm) {
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUsername, loginForm.getUsername())
-                .eq(User::getPassword, userService.getSalt(loginForm.getPassword()))
-                .eq(User::getStatus, 1);
-        User user = userService.getOne(wrapper);
-        if (user != null) {
-            StpUtil.login(user.getId());
-            user.setPassword(null);
-            StpUtil.getSession().set("currentUser", user);
-            Map<String, String> data = new HashMap<>();
-            data.put("token", StpUtil.getTokenValue());
-            return ApiResponse.success(data);
-        } else {
-            return ApiResponse.error(500, "账号或密码错误");
+    public ApiResponse<String> register(@RequestBody LoginQuery registerForm) {
+        if (!StringUtils.hasText(registerForm.getUsername()) || !StringUtils.hasText(registerForm.getPassword())) {
+            return ApiResponse.error(400, "账号或密码不可为空");
         }
-    }
-    @Operation(summary = "获取当前登录用户信息")
-    @GetMapping("/info")
-    public ApiResponse<Map<String, Object>> getInfo() {
-        StpUtil.checkLogin();
-        long userId = StpUtil.getLoginIdAsLong();
-        User user = userService.getById(userId);
-        Map<String, Object> data = new HashMap<>();
-        data.put("username", user.getUsername());
-        data.put("realName", user.getRealName());
-        data.put("avatar", user.getAvatar());
-        data.put("roles", Arrays.asList("admin")); // 抛给前端的极简权限
-        return ApiResponse.success(data);
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getUsername, registerForm.getUsername());
+        long count = userService.count(wrapper);
+        if (count > 0) {
+            return ApiResponse.error(400, "该星象轨迹已存在（账号已被注册）");
+        }
+        User newUser = new User();
+        newUser.setUsername(registerForm.getUsername());
+        newUser.setPassword(userService.getSalt(registerForm.getPassword()));
+        newUser.setStatus(true);
+        boolean success = userService.save(newUser);
+        if (success) {
+            return ApiResponse.success("缔结契约成功");
+        } else {
+            return ApiResponse.error(500, "灵力波动，注册失败");
+        }
     }
     @Operation(summary = "退出登录")
     @PostMapping("/logout")
